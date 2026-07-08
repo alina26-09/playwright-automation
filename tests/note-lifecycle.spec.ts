@@ -1,36 +1,58 @@
 import { test, expect } from "@playwright/test";
 import { LoginPage } from "../pages/LoginPage";
 import { DashboardPage } from "../pages/DashboardPage";
+import { NotesApi } from "../api/NotesApi";
+import { UsersApi } from "../api/UsersApi";
 
 test.describe("Assignment 1: End-to-end UI automation of the note lifecycle", () => {
   let loginPage: LoginPage;
   let dashboardPage: DashboardPage;
-
-  const dynamicTitle = `New_note_on_date_${Date.now()}`;
+  let notesApi: NotesApi;
+  let usersApi: UsersApi;
 
   test.beforeEach(async ({ page }) => {
     loginPage = new LoginPage(page);
     dashboardPage = new DashboardPage(page);
 
     await loginPage.navigateTo("/notes/app/login");
+    await page.addStyleTag({
+      content: "iframe, ins.adsbygoogle { display: none !important; }",
+    });
 
     await loginPage.login(process.env.USER_EMAIL!, process.env.USER_PASSWORD!);
   });
 
   test("Create, edit and delete a note", async () => {
+    const dynamicTitle = `New_note_on_date_${Date.now()}`;
+
     await dashboardPage.createNote(dynamicTitle, "Initial description", "Home");
 
+    await dashboardPage.navigateToCategory("Home");
     const myNote = dashboardPage.getNoteByTitle(dynamicTitle);
-    await expect(myNote).toBeVisible();
+    await expect(myNote).toBeVisible({ timeout: 10000 });
 
     await dashboardPage.editNote(
       dynamicTitle,
       "I will change the description",
       "Work"
     );
+    await dashboardPage.navigateToCategory("Work");
+    await expect(myNote).toBeVisible({ timeout: 10000 });
 
     await dashboardPage.deleteNote(dynamicTitle);
 
-    await expect(myNote).toBeHidden();
+    await expect(myNote).toBeHidden({ timeout: 10000 });
+  });
+
+  test.afterAll(async ({ request }) => {
+    notesApi = new NotesApi(request);
+    usersApi = new UsersApi(request);
+
+    let token = await usersApi.loginAndGetToken(
+      process.env.USER_EMAIL!,
+      process.env.USER_PASSWORD!
+    );
+
+    await notesApi.deleteAllNotes(token);
   });
 });
