@@ -15,7 +15,8 @@ test.describe("Assignment 2: API data and filter validation", () => {
     personal: `Personal_API_${Date.now()}`,
   };
 
-  test.beforeAll("Login and precodintions", async ({ request }) => {
+  test.beforeAll("Login and precodintions", async ({ request, page }) => {
+    loginPage = new LoginPage(page);
     notesApi = new NotesApi(request);
     await loginPage.login(process.env.USER_EMAIL!, process.env.USER_PASSWORD!);
     await notesApi.createNoteViaApi(
