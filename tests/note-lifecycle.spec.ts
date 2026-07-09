@@ -3,6 +3,7 @@ import { LoginPage } from "../pages/LoginPage";
 import { DashboardPage } from "../pages/DashboardPage";
 import { NotesApi } from "../api/NotesApi";
 import { UsersApi } from "../api/UsersApi";
+import { disableAds, loginAndNavigateToDashboard } from "./utils/TestHelpers";
 
 test.describe("Assignment 1: End-to-end UI automation of the note lifecycle", () => {
   let loginPage: LoginPage;
@@ -11,15 +12,7 @@ test.describe("Assignment 1: End-to-end UI automation of the note lifecycle", ()
   let usersApi: UsersApi;
 
   test.beforeEach(async ({ page }) => {
-    loginPage = new LoginPage(page);
-    dashboardPage = new DashboardPage(page);
-
-    await loginPage.navigateTo("/notes/app/login");
-    await page.addStyleTag({
-      content: "iframe, ins.adsbygoogle { display: none !important; }",
-    });
-
-    await loginPage.login(process.env.USER_EMAIL!, process.env.USER_PASSWORD!);
+    dashboardPage = await loginAndNavigateToDashboard(page);
   });
 
   test("Create, edit and delete a note", async () => {
